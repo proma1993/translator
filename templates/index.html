@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Переводчик со стилем</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #8B0000;
+            --secondary-color: #FFF5F5;
+            --accent-color: #FFE4E4;
+            --text-color: #2C1810;
+            --border-color: #E8D3D3;
+            --shadow-color: rgba(139, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: white;
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem 0;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px var(--shadow-color);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .translation-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .style-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0.5rem 0;
+            margin-bottom: 1rem;
+        }
+
+        .style-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .translation-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .translation-box {
+            display: flex;
+            flex-direction: column;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .language-selector {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .language-option {
+            color: #444;
+            text-decoration: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .language-option.active {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .language-option:hover {
+            background-color: #f0f0f0;
+        }
+
+        select {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            background-color: transparent;
+            cursor: pointer;
+        }
+
+        select:hover {
+            background-color: #f5f5f5;
+        }
+
+        select:focus {
+            outline: none;
+            background-color: #f5f5f5;
+        }
+
+        .style-description {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 1rem;
+            border: none;
+            font-size: 1rem;
+            resize: none;
+            background-color: transparent;
+        }
+
+        textarea:focus {
+            outline: none;
+        }
+
+        #translation-result {
+            color: #666;
+        }
+
+        .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .loading-spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            color: #d93025;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .translation-section {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .style-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .style-control {
+                margin-top: 0.5rem;
+            }
+        }
+
+        .buttons-row {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .action-button {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .translate-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .translate-btn:hover {
+            background-color: #a00000;
+        }
+
+        .translate-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .clear-btn {
+            background-color: #f5f5f5;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+
+        .clear-btn:hover {
+            background-color: #e5e5e5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Переводчик со стилем</h1>
+            <p class="subtitle">Переводите тексты с сохранением стиля и контекста</p>
+        </header>
+
+        <div class="translation-container">
+            <div class="style-row">
+                <div class="style-control">
+                    <select id="style-select">
+                        {% for code, name in styles.items() %}
+                        <option value="{{ code }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                    <span class="style-description" id="style-description"></span>
+                </div>
+            </div>
+
+            <div class="translation-section">
+                <div class="translation-box">
+                    <div class="language-selector">
+                        <a href="#" class="language-option active" data-lang="en">английский</a>
+                        <a href="#" class="language-option" data-lang="ru">русский</a>
+                    </div>
+                    <textarea id="source-text" placeholder="Введите текст"></textarea>
+                </div>
+                <div class="translation-box">
+                    <div class="language-selector">
+                        <a href="#" class="language-option active" data-lang="ru">русский</a>
+                        <a href="#" class="language-option" data-lang="en">английский</a>
+                    </div>
+                    <textarea id="translation-result" readonly placeholder="Перевод"></textarea>
+                </div>
+            </div>
+
+            <div class="buttons-row">
+                <button id="translate-btn" class="action-button translate-btn">Перевести</button>
+                <button id="clear-btn" class="action-button clear-btn">Очистить</button>
+            </div>
+
+            <div class="loading">
+                <div class="loading-spinner"></div>
+            </div>
+
+            <div class="error"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const styleSelect = document.getElementById('style-select');
+            const sourceText = document.getElementById('source-text');
+            const translationResult = document.getElementById('translation-result');
+            const translateBtn = document.getElementById('translate-btn');
+            const loadingSpinner = document.querySelector('.loading');
+            const errorMessage = document.querySelector('.error');
+
+            // Простые описания стилей
+            const styleDescriptions = {
+                'formal': 'Деловой стиль общения',
+                'informal': 'Повседневный разговорный стиль',
+                'slang': 'Современный молодёжный сленг',
+                'old_fashioned': 'Старомодный, классический стиль'
+            };
+
+            // Обновляем описание стиля при выборе
+            styleSelect.addEventListener('change', function() {
+                const description = document.querySelector('.style-description');
+                description.textContent = styleDescriptions[this.value] || '';
+            });
+
+            // Устанавливаем начальное описание
+            const description = document.querySelector('.style-description');
+            description.textContent = styleDescriptions[styleSelect.value] || '';
+
+            // Остальной код без изменений
+            let sourceLang = 'en';
+            let targetLang = 'ru';
+
+            // Обработка выбора языков
+            document.querySelectorAll('.language-selector').forEach(selector => {
+                selector.addEventListener('click', function(e) {
+                    if (!e.target.classList.contains('language-option')) return;
+                    e.preventDefault();
+                    
+                    const selectedLang = e.target.dataset.lang;
+                    const isSource = this.closest('.translation-box').querySelector('#source-text') !== null;
+                    
+                    // Получаем противоположный селектор
+                    const otherSelector = document.querySelector(
+                        isSource ? 
+                        '.translation-box:nth-child(2) .language-selector' : 
+                        '.translation-box:nth-child(1) .language-selector'
+                    );
+                    
+                    // Убираем активный класс у всех опций в текущем селекторе
+                    this.querySelectorAll('.language-option').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                    
+                    // Добавляем активный класс выбранной опции
+                    e.target.classList.add('active');
+                    
+                    // Обновляем противоположный селектор
+                    const oppositeOptions = otherSelector.querySelectorAll('.language-option');
+                    oppositeOptions.forEach(opt => {
+                        if (opt.dataset.lang === selectedLang) {
+                            // Если выбран такой же язык, переключаем на другой
+                            const otherLang = selectedLang === 'ru' ? 'en' : 'ru';
+                            const otherOption = Array.from(oppositeOptions).find(o => o.dataset.lang === otherLang);
+                            if (otherOption) {
+                                oppositeOptions.forEach(o => o.classList.remove('active'));
+                                otherOption.classList.add('active');
+                                if (isSource) {
+                                    targetLang = otherLang;
+                                } else {
+                                    sourceLang = otherLang;
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Обновляем переменные языков
+                    if (isSource) {
+                        sourceLang = selectedLang;
+                    } else {
+                        targetLang = selectedLang;
+                    }
+                    
+                    console.log('Source:', sourceLang, 'Target:', targetLang);
+                });
+            });
+
+            // Обработчик кнопки перевода
+            translateBtn.addEventListener('click', function() {
+                translateText();
+            });
+
+            // Обработчик кнопки очистки
+            document.getElementById('clear-btn').addEventListener('click', function() {
+                document.getElementById('source-text').value = '';
+                document.getElementById('translation-result').value = '';
+                document.querySelector('.error').classList.remove('show');
+            });
+
+            async function translateText() {
+                const text = document.getElementById('source-text').value;
+                const style = document.getElementById('style-select').value;
+                const loading = document.querySelector('.loading');
+                const error = document.querySelector('.error');
+                const translateBtn = document.getElementById('translate-btn');
+
+                if (!text) {
+                    showError('Пожалуйста, введите текст для перевода');
+                    return;
+                }
+
+                loading.classList.add('show');
+                error.classList.remove('show');
+                translateBtn.disabled = true;
+                document.getElementById('translation-result').value = '';
+
+                try {
+                    const response = await fetch('/translate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            text,
+                            source_lang: sourceLang,
+                            target_lang: targetLang,
+                            style
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+
+                    const taskId = data.task_id;
+                    await pollTranslationStatus(taskId);
+
+                } catch (err) {
+                    showError(err.message);
+                } finally {
+                    loading.classList.remove('show');
+                    translateBtn.disabled = false;
+                }
+            }
+
+            async function pollTranslationStatus(taskId) {
+                const maxAttempts = 30;
+                let attempts = 0;
+
+                while (attempts < maxAttempts) {
+                    const response = await fetch(`/status/${taskId}`);
+                    const data = await response.json();
+
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+
+                    if (data.translated_text) {
+                        showResult(data.translated_text);
+                        return;
+                    }
+
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    attempts++;
+                }
+
+                throw new Error('Превышено время ожидания перевода');
+            }
+
+            function showResult(text) {
+                const resultTextarea = document.getElementById('translation-result');
+                resultTextarea.value = text;
+            }
+
+            function showError(message) {
+                const error = document.querySelector('.error');
+                error.textContent = message;
+                error.classList.add('show');
+            }
+        });
+    </script>
+</body>
+</html> 
